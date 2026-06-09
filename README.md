@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="noa.png" alt="NOA logo" width="auto" />
+</p>
+
 # NOA Telemetry POC
 
 A proof-of-concept telemetry platform composed of a Django backend, a Next.js frontend, and Terraform infrastructure definitions. The repository is currently structured for local development and incremental feature work on the `dev` branch, with `main` reserved for production-ready releases.
