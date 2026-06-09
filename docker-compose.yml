@@ -1,0 +1,36 @@
+services:
+  # The Relational Storage Engine
+  postgres:
+    image: postgres:15-alpine
+    container_name: noa_postgres
+    environment:
+      POSTGRES_DB: noa_db
+      POSTGRES_USER: engine_admin
+      POSTGRES_PASSWORD: supersecretpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # The Celery Message Broker & Cache Layer
+  redis:
+    image: redis:7-alpine
+    container_name: noa_redis
+    ports:
+      - "6379:6379"
+
+  # Local AWS Cloud Emulator (SQS & Secrets Manager)
+  localstack:
+    image: localstack/localstack:4.14.0
+    container_name: noa_aws_cloud
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,secretsmanager
+      - AWS_DEFAULT_REGION=af-south-1
+    volumes:
+      - "localstack_data:/var/lib/localstack"
+
+volumes:
+  postgres_data:
+  localstack_data:
