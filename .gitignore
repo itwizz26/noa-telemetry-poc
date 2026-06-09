@@ -37,6 +37,18 @@ package-lock.json
 pnpm-lock.yaml
 next-env.d.ts
 
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
 # IDE/editor files
 .vscode/
 .idea/
