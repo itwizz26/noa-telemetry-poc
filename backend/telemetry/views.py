@@ -47,8 +47,8 @@ class TelemetryIngestView(APIView):
             total_mwh=Sum('megawatts_delivered')
         )
         
-        # Pull the last 50 intervals to feed our time-series line graph curve
-        recent_readings = TelemetryReading.objects.order_by('-timestamp')[:50]
+        # Pull all intervals to feed our time-series line graph curve
+        recent_readings = TelemetryReading.objects.order_by('-timestamp')
         
         # Map time series objects cleanly to match our TypeScript contracts
         graph_data = [
