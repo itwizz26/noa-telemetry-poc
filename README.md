@@ -53,6 +53,4 @@ A proof-of-concept telemetry platform composed of a Django backend, a Next.js fr
 ## Next steps
 
 - Add tests for backend and frontend flows.
-- Wire real queue and database integration.
-- Extend the dashboard and telemetry analytics views.
-- Harden deployment and infrastructure automation.
+- Harden deployment and infrastructure automation via orchestration.
