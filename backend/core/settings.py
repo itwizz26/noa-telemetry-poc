@@ -49,11 +49,20 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "core.urls"
 
-
-# Relational Database Configuration Mapping
+# 1. Parse the base connection string natively
 DATABASES = {
-    'default': env.db(), # Automatically parses standard database engine layouts
+    'default': env.db(
+        'DATABASE_URL', 
+        default='postgres://postgres:postgres@localhost:5432/noa_telemetry_poc'
+    )
 }
+
+# 2. Inject pooling arguments directly to bypass django-environ parser restrictions
+# Forces Django to reuse connections for up to 10 minutes (600 seconds)
+DATABASES['default']['CONN_MAX_AGE'] = 600
+
+# Enables persistent connection health checks to drop dead sockets safely
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 # 3. Configure REST Framework to use JWT Authentication globally
 REST_FRAMEWORK = {
