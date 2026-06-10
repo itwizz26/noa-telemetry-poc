@@ -36,6 +36,9 @@ app.conf.update(
         'predefined_queues': {
             'celery': {
                 'url': env('SQS_QUEUE_URL')
+            },
+            'dev-ipp-telemetry-dlq': {
+                'url': env('SQS_DLQ_URL')
             }
         }
     },
@@ -46,6 +49,11 @@ app.conf.update(
     result_serializer='json',
     timezone='Africa/Johannesburg',
     enable_utc=True,
+    
+    # Force acknowledgment behavior to happen only AFTER task execution completes.
+    # Crucial for enterprise reliability: if the worker dies mid-task, the message stays on SQS.
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
 )
 
 app.autodiscover_tasks()
