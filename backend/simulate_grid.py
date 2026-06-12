@@ -2,7 +2,7 @@
 import time
 import random
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 # Endpoint target matching your clean routing structure
 API_URL = "http://127.0.0.1:8000/api/v1/ingest/"
@@ -36,7 +36,7 @@ def run_simulation():
     print("--------------------------------------------------")
 
     # Start the simulated clock at midnight today
-    simulated_time = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    simulated_time = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     
     while True:
         current_hour = simulated_time.hour
@@ -69,7 +69,7 @@ def run_simulation():
         simulated_time += timedelta(minutes=30)
         
         # Reset clock back to midnight if we complete a full 24-hour cycle rotation
-        if simulated_time.date() > datetime.utcnow().date():
+        if simulated_time.date() > datetime.now(UTC).date():
             simulated_time = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             print("\n🔄 Completed 24-hour cycle. Resetting timeline...\n")
 

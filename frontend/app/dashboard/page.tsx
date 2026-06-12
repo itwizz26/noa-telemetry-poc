@@ -28,7 +28,6 @@ export default function TelemetryDashboard() {
             if (!isBackground) setLoading(true);
             setIsPolling(true);
             setError(null);
-            
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
             let res: Response;
