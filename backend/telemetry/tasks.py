@@ -27,6 +27,8 @@ class DLQRoutingTask(Task):
     bind=True, 
     base=DLQRoutingTask,
     name="telemetry.tasks.process_telemetry_batch_task",
+    # 💥 CRITICAL FIX: Bind the main task explicitly to your ingestion queue name
+    queue="dev-ipp-telemetry-ingestion-queue",
     max_retries=3,
     default_retry_delay=2
 )

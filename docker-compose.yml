@@ -30,6 +30,92 @@ services:
       - AWS_DEFAULT_REGION=af-south-1
     volumes:
       - "localstack_data:/var/lib/localstack"
+      # Mount our shell script to localstack's auto-run hooks directory
+      - ./backend/docker-init:/etc/localstack/init/ready.d
+    # Add a real health check to confirm LocalStack's inner API port is actively taking traffic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  # The Django API Ingestion Gate & Web Server
+  backend:
+    build:
+      context: ./backend
+    container_name: noa_backend
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: dev-secret-key
+      DEBUG: "True"
+      DATABASE_URL: postgres://engine_admin:supersecretpassword@postgres:5432/noa_db
+      AWS_ACCESS_KEY_ID: mock_access_key
+      AWS_SECRET_ACCESS_KEY: mock_secret_key
+      AWS_DEFAULT_REGION: af-south-1
+      
+      # Inter-container routing points to the service name 'localstack'
+      CELERY_BROKER_URL: sqs://@localstack:4566
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      SQS_ENDPOINT_URL: http://localstack:4566
+      SQS_QUEUE_URL: http://sqs.af-south-1.localstack:4566/000000000000/dev-ipp-telemetry-ingestion-queue
+      SQS_DLQ_URL: http://sqs.af-south-1.localstack:4566/000000000000/dev-ipp-telemetry-dlq
+    volumes:
+      - ./backend:/app
+      - /app/.venv/  # 💡 Keeps the worker from trying to scan your host's heavy .venv folder
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # The Async Task Execution Engine
+  celery_worker:
+    build:
+      context: ./backend
+    container_name: noa_celery_worker
+    # Tell Docker not to spawn the worker until localstack passes its health check loop
+    depends_on:
+      backend:
+        condition: service_started
+      redis:
+        condition: service_started
+      localstack:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: dev-secret-key
+      DEBUG: "True"
+      DATABASE_URL: postgres://engine_admin:supersecretpassword@postgres:5432/noa_db
+      AWS_ACCESS_KEY_ID: mock_access_key
+      AWS_SECRET_ACCESS_KEY: mock_secret_key
+      AWS_DEFAULT_REGION: af-south-1
+      CELERY_BROKER_URL: sqs://@localstack:4566
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      SQS_ENDPOINT_URL: http://localstack:4566
+      SQS_QUEUE_URL: http://sqs.af-south-1.localstack:4566/000000000000/dev-ipp-telemetry-ingestion-queue
+      SQS_DLQ_URL: http://sqs.af-south-1.localstack:4566/000000000000/dev-ipp-telemetry-dlq
+    volumes:
+      - ./backend:/app
+      - /app/.venv/
+    command: celery -A core worker -Q dev-ipp-telemetry-ingestion-queue --loglevel=info
+
+  # The Frontend User Interface
+  frontend:
+    build:
+      context: ./frontend
+    container_name: noa_frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   postgres_data:

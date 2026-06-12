@@ -28,10 +28,11 @@ export default function TelemetryDashboard() {
             if (!isBackground) setLoading(true);
             setIsPolling(true);
             setError(null);
-            
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
             let res: Response;
             try {
-                res = await fetch('http://127.0.0.1:8000/api/v1/analytics/');
+                res = await fetch(`${apiBaseUrl}/api/v1/analytics/`);
             } catch (networkError) {
                 throw new Error("Network connection refused. Verify that the Django server is running on port 8000.");
             }

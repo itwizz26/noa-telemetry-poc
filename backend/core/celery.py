@@ -1,4 +1,3 @@
-# backend/core/celery.py
 import os
 import environ
 from celery import Celery
@@ -23,18 +22,25 @@ if 'AWS_SESSION_TOKEN' in os.environ:
 
 app = Celery('core')
 
-# Construct runtime broker using safe environment variables
+# Construct runtime broker safely using credentials
 broker_credentials = f"{env('AWS_ACCESS_KEY_ID')}:{env('AWS_SECRET_ACCESS_KEY')}"
 sqs_host = env('SQS_ENDPOINT_URL').replace('http://', '').replace('https://', '')
 
 app.conf.update(
     broker_url=f'sqs://{broker_credentials}@{sqs_host}',
+    
+    # 1. Force the default queue globally inside Celery
+    task_default_queue='dev-ipp-telemetry-ingestion-queue',
+    
     broker_transport_options={
         'region': env('AWS_DEFAULT_REGION'),
         'endpoint_url': env('SQS_ENDPOINT_URL'),
         'use_ssl': False,
+        
+        # 2. Hardcode the explicit string literal keys so Kombu's internal
+        # SQS.py _resolve_queue_url lookup cannot fail with a KeyError.
         'predefined_queues': {
-            'celery': {
+            'dev-ipp-telemetry-ingestion-queue': {
                 'url': env('SQS_QUEUE_URL')
             },
             'dev-ipp-telemetry-dlq': {
@@ -51,7 +57,6 @@ app.conf.update(
     enable_utc=True,
     
     # Force acknowledgment behavior to happen only AFTER task execution completes.
-    # Crucial for enterprise reliability: if the worker dies mid-task, the message stays on SQS.
     task_acks_late=True,
     task_reject_on_worker_lost=True,
 )

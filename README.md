@@ -11,7 +11,7 @@ A proof-of-concept telemetry platform composed of a Django backend, a Next.js fr
 - `backend/` — Django + DRF API, Celery-style task flow, telemetry models, serializers, and ingestion endpoints.
 - `frontend/` — Next.js app for the dashboard and telemetry UI.
 - `terraform/` — Infrastructure-as-code definitions for queue and deployment support.
-- `docker-compose.yml` — Local services for PostgreSQL, Redis, and LocalStack.
+- `docker-compose.yml` — Local infrastructure plus the Django backend and Next.js frontend services.
 
 ## Current architecture
 
@@ -21,20 +21,26 @@ A proof-of-concept telemetry platform composed of a Django backend, a Next.js fr
 
 ## Quick start
 
-1. Start local infrastructure
-   - `docker-compose up`
+1. Start the full stack
+   - `docker compose up --build`
+   - This brings up PostgreSQL, Redis, LocalStack, the Django API on `http://localhost:8000`, and the Next.js UI on `http://localhost:3000`.
 
-2. Backend
+2. Backend (if you want to run it outside Docker)
    - Create and activate a Python virtual environment in `backend/`.
    - Install dependencies: `pip install -r requirements.txt`
    - Apply migrations: `python manage.py migrate`
    - Start the API: `python manage.py runserver`
 
-3. Frontend
+3. Frontend (if you want to run it outside Docker)
    - In `frontend/`, install dependencies: `npm install`
    - Start the UI: `npm run dev`
 
-4. Optional simulation
+5. Useful container commands
+   - `docker compose logs -f backend`
+   - `docker compose exec backend python manage.py migrate`
+   - `docker compose down`
+
+6. Optional simulation
    - Run `python simulate_grid.py` from `backend/` to send sample telemetry into the ingestion endpoint.
 
 ## Repo conventions
